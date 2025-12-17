@@ -10,9 +10,12 @@
     "description": "Host a Next JS application. Sets type: module for ESM support. Fixed bind address.",
     "features": null,
     "docker_images": {
+        "Nodejs 24": "ghcr.io/parkervcp/yolks:nodejs_24",
+        "Nodejs 23": "ghcr.io/parkervcp/yolks:nodejs_23",
         "Nodejs 22": "ghcr.io/parkervcp/yolks:nodejs_22",
         "Nodejs 21": "ghcr.io/parkervcp/yolks:nodejs_21",
         "Nodejs 20": "ghcr.io/parkervcp/yolks:nodejs_20",
+        "Nodejs 19": "ghcr.io/parkervcp/yolks:nodejs_19",
         "Nodejs 18": "ghcr.io/parkervcp/yolks:nodejs_18"
     },
     "file_denylist": [],
