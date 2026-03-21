@@ -7,9 +7,10 @@
     "exported_at": "2025-12-17T14:00:00+01:00",
     "name": "Next JS",
     "author": "info@joopdev.com",
-    "description": "Host a Next JS application. Sets type: module for ESM support. Fixed bind address.",
+    "description": "Host a Next.js application with reliable 0.0.0.0 binding and auto package manager detection.",
     "features": null,
     "docker_images": {
+        "Nodejs 25": "ghcr.io/parkervcp/yolks:nodejs_25",
         "Nodejs 24": "ghcr.io/parkervcp/yolks:nodejs_24",
         "Nodejs 23": "ghcr.io/parkervcp/yolks:nodejs_23",
         "Nodejs 22": "ghcr.io/parkervcp/yolks:nodejs_22",
@@ -19,16 +20,16 @@
         "Nodejs 18": "ghcr.io/parkervcp/yolks:nodejs_18"
     },
     "file_denylist": [],
-    "startup": "if [ ! -d /home/container/node_modules ]; then mkdir -p /home/container/node_modules; fi; if [ ! \"$(ls -A /home/container)\" ]; then echo -e \"/home/container is empty.\"; if [ -n \"${GIT_URL}\" ]; then echo -e \"Git URL found, cloning...\"; if [ -z ${GIT_BRANCH} ]; then git clone ${GIT_URL} /home/container; else git clone --single-branch --branch ${GIT_BRANCH} ${GIT_URL} /home/container; fi; fi; fi; if [ ! -f /home/container/package.json ]; then echo -e \"No package.json found. Generating safely using npm init...\"; npm init -y; npm pkg set type=\"module\"; npm pkg set scripts.dev=\"next dev\"; npm pkg set scripts.build=\"next build\"; npm pkg set scripts.start=\"next start\"; echo -e \"Installing Next.js {{NEXT_VERSION}}...\"; npm install next@{{NEXT_VERSION}} react@latest react-dom@latest; else echo -e \"package.json found, skipping creation.\"; fi; if [ -d .git ] && [ \"{{AUTO_UPDATE}}\" == \"1\" ]; then git pull; fi; echo -e \"Running npm install...\"; npm install; echo -e \"Building project...\"; npm run build; echo -e \"Starting server...\"; /usr/local/bin/npx next ${NODE_RUN_ENV} -H 0.0.0.0 -p {{SERVER_PORT}}",
+    "startup": "cd /home/container; if [ ! \"$(ls -A /home/container 2>/dev/null)\" ]; then echo -e \"/home/container is empty.\"; if [ -n \"${GIT_URL}\" ]; then echo -e \"Git URL found, cloning...\"; if [ -z \"${GIT_BRANCH}\" ]; then git clone \"${GIT_URL}\" /home/container; else git clone --single-branch --branch \"${GIT_BRANCH}\" \"${GIT_URL}\" /home/container; fi; fi; fi; if [ ! -f package.json ]; then echo -e \"No package.json found. Creating a minimal Next.js project...\"; npm init -y; npm pkg set type=\"module\"; npm pkg set scripts.dev=\"next dev\"; npm pkg set scripts.build=\"next build\"; npm pkg set scripts.start=\"next start\"; echo -e \"Installing Next.js {{NEXT_VERSION}}...\"; npm install next@{{NEXT_VERSION}} react@latest react-dom@latest; else echo -e \"package.json found, skipping creation.\"; fi; if [ -d .git ] && [ \"{{AUTO_UPDATE}}\" = \"1\" ]; then echo -e \"Auto update enabled, pulling latest changes...\"; git pull; fi; corepack enable >/dev/null 2>&1 || true; PM_CHOICE=\"${PACKAGE_MANAGER:-auto}\"; if [ \"${PM_CHOICE}\" = \"auto\" ]; then if [ -f pnpm-lock.yaml ]; then PM_CHOICE=\"pnpm\"; elif [ -f yarn.lock ]; then PM_CHOICE=\"yarn\"; else PM_CHOICE=\"npm\"; fi; fi; echo -e \"Using package manager: ${PM_CHOICE}\"; if [ \"${NODE_RUN_ENV}\" = \"dev\" ]; then if [ \"${PM_CHOICE}\" = \"pnpm\" ]; then pnpm install; elif [ \"${PM_CHOICE}\" = \"yarn\" ]; then yarn install; else npm install; fi; else if [ \"${PM_CHOICE}\" = \"pnpm\" ]; then if [ -f pnpm-lock.yaml ]; then pnpm install --prod --frozen-lockfile; else pnpm install --prod; fi; elif [ \"${PM_CHOICE}\" = \"yarn\" ]; then yarn install --production=true; else if [ -f package-lock.json ] || [ -f npm-shrinkwrap.json ]; then npm ci --omit=dev; else npm install --omit=dev; fi; fi; fi; if [ \"${NODE_RUN_ENV}\" = \"start\" ]; then echo -e \"Building project for production...\"; if [ \"${PM_CHOICE}\" = \"pnpm\" ]; then pnpm run build; elif [ \"${PM_CHOICE}\" = \"yarn\" ]; then yarn build; else npm run build; fi; fi; echo -e \"Starting Next.js with mode: ${NODE_RUN_ENV}\"; /usr/local/bin/npx next ${NODE_RUN_ENV} -H 0.0.0.0 -p {{SERVER_PORT}}",
     "config": {
         "files": "{}",
-        "startup": "{\r\n    \"done\": \"Ready on\"\r\n}",
+        "startup": "{\r\n    \"done\": \"Ready in\"\r\n}",
         "logs": "{}",
         "stop": "^^C"
     },
     "scripts": {
         "installation": {
-            "script": "#!/bin/bash\r\n# NodeJS App Installation Script\r\napt update\r\napt install -y git curl jq file unzip make gcc g++ python python-dev libtool\r\n\r\nmkdir -p /mnt/server\r\ncd /mnt/server\r\n\r\nif [ -n \"${GIT_URL}\" ]; then\r\n    if [[ ${GIT_URL} != *.git ]]; then\r\n        GIT_URL=${GIT_URL%/} \r\n        GIT_URL=${GIT_URL}.git\r\n    fi\r\n\r\n    if [ -z \"${USERNAME}\" ] && [ -z \"${ACCESS_TOKEN}\" ]; then\r\n        echo -e \"using anon api call\"\r\n    else\r\n        GIT_URL=\"https://${USERNAME}:${ACCESS_TOKEN}@$(echo -e ${GIT_URL} | cut -d/ -f3-)\"\r\n    fi\r\n\r\n    if [ ! \"$(ls -A /mnt/server)\" ]; then\r\n        echo -e \"cloning files into repo\"\r\n        if [ -z ${GIT_BRANCH} ]; then\r\n            git clone ${GIT_URL} .\r\n        else\r\n            git clone --single-branch --branch ${GIT_BRANCH} ${GIT_URL} .\r\n        fi\r\n    fi\r\nfi\r\n\r\nif [ -f /mnt/server/package.json ]; then\r\n    /usr/local/bin/npm install --production\r\nfi\r\n\r\necho -e \"install complete\"\r\nexit 0",
+            "script": "#!/bin/bash\r\n# NodeJS App Installation Script\r\napt update\r\napt install -y git curl jq file unzip make gcc g++ python3 libtool\r\n\r\nmkdir -p /mnt/server\r\ncd /mnt/server\r\n\r\nif [ -n \"${GIT_URL}\" ]; then\r\n    if [[ ${GIT_URL} != *.git ]]; then\r\n        GIT_URL=${GIT_URL%/} \r\n        GIT_URL=${GIT_URL}.git\r\n    fi\r\n\r\n    if [ -z \"${USERNAME}\" ] && [ -z \"${ACCESS_TOKEN}\" ]; then\r\n        echo -e \"using anon api call\"\r\n    else\r\n        GIT_URL=\"https://${USERNAME}:${ACCESS_TOKEN}@$(echo -e ${GIT_URL} | cut -d/ -f3-)\"\r\n    fi\r\n\r\n    if [ ! \"$(ls -A /mnt/server)\" ]; then\r\n        echo -e \"cloning files into repo\"\r\n        if [ -z \"${GIT_BRANCH}\" ]; then\r\n            git clone \"${GIT_URL}\" .\r\n        else\r\n            git clone --single-branch --branch \"${GIT_BRANCH}\" \"${GIT_URL}\" .\r\n        fi\r\n    fi\r\nfi\r\n\r\nif [ -f /mnt/server/package.json ]; then\r\n    corepack enable >/dev/null 2>&1 || true\r\n    PM_CHOICE=${PACKAGE_MANAGER:-auto}\r\n\r\n    if [ \"${PM_CHOICE}\" = \"auto\" ]; then\r\n        if [ -f /mnt/server/pnpm-lock.yaml ]; then\r\n            PM_CHOICE=pnpm\r\n        elif [ -f /mnt/server/yarn.lock ]; then\r\n            PM_CHOICE=yarn\r\n        else\r\n            PM_CHOICE=npm\r\n        fi\r\n    fi\r\n\r\n    echo -e \"using package manager: ${PM_CHOICE}\"\r\n\r\n    if [ \"${PM_CHOICE}\" = \"pnpm\" ]; then\r\n        if [ -f /mnt/server/pnpm-lock.yaml ]; then\r\n            pnpm install --prod --frozen-lockfile\r\n        else\r\n            pnpm install --prod\r\n        fi\r\n    elif [ \"${PM_CHOICE}\" = \"yarn\" ]; then\r\n        yarn install --production=true\r\n    else\r\n        if [ -f /mnt/server/package-lock.json ] || [ -f /mnt/server/npm-shrinkwrap.json ]; then\r\n            /usr/local/bin/npm ci --omit=dev\r\n        else\r\n            /usr/local/bin/npm install --omit=dev\r\n        fi\r\n    fi\r\nfi\r\n\r\necho -e \"install complete\"\r\nexit 0",
             "container": "node:20-bullseye-slim",
             "entrypoint": "bash"
         }
@@ -46,12 +47,22 @@
         },
         {
             "name": "Node ENV",
-            "description": "NodeJS env (production or dev) used in start command.",
+            "description": "Runtime mode for Next.js command: use 'start' for production or 'dev' for development.",
             "env_variable": "NODE_RUN_ENV",
             "default_value": "start",
             "user_viewable": true,
             "user_editable": true,
-            "rules": "required|string|max:20",
+            "rules": "required|string|in:start,dev",
+            "field_type": "text"
+        },
+        {
+            "name": "Package Manager",
+            "description": "Choose package manager: auto (detect by lockfile), npm, pnpm, or yarn.",
+            "env_variable": "PACKAGE_MANAGER",
+            "default_value": "auto",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "required|string|in:auto,npm,pnpm,yarn",
             "field_type": "text"
         },
         {

@@ -9,13 +9,20 @@ By default, Next.js applications often bind to `localhost` (127.0.0.1). Inside a
 
 **This Egg fixes that** by automatically forcing the start command to listen on all interfaces (`0.0.0.0`), ensuring your site is immediately accessible after deployment.
 
+It also improves startup reliability by using smarter dependency install behavior with package manager detection:
+
+* `auto` mode detects lockfiles and picks `pnpm`, `yarn`, or `npm` automatically.
+* In `start` mode, it installs production dependencies and builds before launch.
+* In `dev` mode, it installs full dependencies so local development tools still work.
+
 ---
 
 ## 🧩 Supported Versions
 
 This Egg comes pre-configured with **all modern Node.js versions**, selectable during installation:
 
-* **Node.js 24** (Latest)
+* **Node.js 25** (Latest)
+* **Node.js 24** (LTS)
 * **Node.js 23**
 * **Node.js 22** (LTS)
 * **Node.js 21**
@@ -31,16 +38,33 @@ This Egg comes pre-configured with **all modern Node.js versions**, selectable d
 
 * **🔌 Instant Connectivity:** Pre-configured to listen on `0.0.0.0`, solving connection timeouts.
 * **📦 Auto-Install:** Automatically runs `npm install` on startup if packages are missing.
-* **⚙️ Auto-Build:** Runs `npm run build` to ensure your production build is fresh.
+* **⚙️ Smart Build:** Runs `npm run build` automatically in production mode (`NODE_RUN_ENV=start`).
+* **🧠 Package Manager Auto-Detect:** Supports `npm`, `pnpm`, and `yarn` with optional manual override.
 * **🔒 Secure:** Based on the official Pterodactyl Docker images (Parkervcp/Yolks).
+* **✅ Better Validation:** Restricts runtime mode to `start` or `dev` to prevent invalid command values.
+
+## 🔧 Recommended Variables
+
+* `NODE_RUN_ENV`: `start` for production, `dev` for development.
+* `PACKAGE_MANAGER`: `auto` (default), `npm`, `pnpm`, or `yarn`.
 
 ## 📥 Installation Guide
 
-1.  **Download:** Get the `egg-nextjs.json` file from this repository (or copy the RAW link).
+1.  **Download:** Get the `nextjs-egg.json` file from this repository (or copy the RAW link).
 2.  **Import:** Go to your **Pterodactyl Admin Panel** -> **Nests** -> **Import Egg**.
 3.  **Select Nest:** Choose the appropriate Nest (usually "NodeJS" or "Generic").
-4.  **Upload:** Upload the JSON file.
+4.  **Upload:** Upload `nextjs-egg.json` and complete the import wizard.
 5.  **Deploy:** You can now create new servers using this Egg!
+
+---
+
+## 🛠️ Troubleshooting
+
+* **Install fails with package manager errors:** Set `PACKAGE_MANAGER` manually to `npm`, `pnpm`, or `yarn` instead of `auto`.
+* **`pnpm` or `yarn` command not found:** Keep `PACKAGE_MANAGER=npm` or ensure Corepack is available in your selected Node image.
+* **Unexpected dependency behavior:** Verify lockfiles in your project root (`package-lock.json`, `pnpm-lock.yaml`, or `yarn.lock`).
+* **Server builds on every boot in production:** This is expected when `NODE_RUN_ENV=start`; use `dev` while iterating quickly.
+* **Server not reachable from outside:** Confirm your panel allocation/port is correct; this Egg already binds Next.js to `0.0.0.0`.
 
 ---
 
