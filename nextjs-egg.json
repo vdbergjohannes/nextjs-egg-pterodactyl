@@ -2,9 +2,9 @@
     "_comment": "DO NOT EDIT: FILE GENERATED AUTOMATICALLY BY PTERODACTYL PANEL - PTERODACTYL.IO",
     "meta": {
         "version": "PTDL_v2",
-        "update_url": null
+        "update_url": "https://raw.githubusercontent.com/joopdev/nextjs-egg-pterodactyl/main/nextjs-egg.json"
     },
-    "exported_at": "2025-12-17T14:00:00+01:00",
+    "exported_at": "2026-03-23T12:00:00+00:00",
     "name": "Next JS",
     "author": "info@joopdev.com",
     "description": "Host a Next.js application with reliable 0.0.0.0 binding and auto package manager detection.",
@@ -92,7 +92,7 @@
             "default_value": "0",
             "user_viewable": true,
             "user_editable": true,
-            "rules": "required|boolean",
+            "rules": "required|in:0,1",
             "field_type": "text"
         },
         {

@@ -56,6 +56,8 @@ This Egg comes pre-configured with **all modern Node.js versions**, selectable d
 4.  **Upload:** Upload `nextjs-egg.json` and complete the import wizard.
 5.  **Deploy:** You can now create new servers using this Egg!
 
+> **Auto-Update:** This Egg is configured with an `update_url` pointing to the latest version on GitHub. You can update it in your panel via **Admin** -> **Nests** -> select the egg -> **Update from URL**.
+
 ---
 
 ## 🛠️ Troubleshooting
